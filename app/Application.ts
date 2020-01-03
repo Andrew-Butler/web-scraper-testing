@@ -23,19 +23,16 @@ export class Application
     //bind to any exit of the application
     private static handleExit(express: ExpressServer) {
         process.on('uncaughtException', (err: Error) => {
-            console.error('Uncaught exception', err);
             Application.shutdownProperly(1, express);
         })
         process.on('unhandledRejection', (reason: {} | null | undefined) => {
-            console.error('Unhandled Rejection at promise', reason);
+            
             Application.shutdownProperly(2, express);
         })
         process.on('SIGINT', () => {
-            console.info('Caught SIGINT');
             Application.shutdownProperly(128 + 2, express);
         })
         process.on('SIGTERM', () => {
-            console.info('Caught SIGTERM');
             Application.shutdownProperly(128 + 2, express);
         })
         process.on('exit', () => {

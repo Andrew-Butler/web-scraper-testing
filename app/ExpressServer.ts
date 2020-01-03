@@ -1,9 +1,18 @@
-import * as express from 'express'
-import { Express } from 'express'
-import { Server } from 'http'
-import * as compress from 'compression'
-import * as bodyParser from 'body-parser'
-import * as cookieParser from 'cookie-parser'
+import * as express from 'express';
+import { Express } from 'express';
+import { Server } from 'http';
+import * as bodyParser from 'body-parser';
+
+//schema imports
+import SearchSchema from "./controller/search/Schema/search.schema";
+
+//middleware
+import SchemaMiddleware from "./middleware/json-schema/SchemaMiddleware";
+
+//controllers
+import { AppController } from './controller/app/AppController';
+import { SearchController } from './controller/search/SearchController'
+
 
 /**
  * Abstraction around the raw Express.js server and Nodes' HTTP server.
@@ -12,18 +21,18 @@ import * as cookieParser from 'cookie-parser'
  */
 export class ExpressServer 
 {
-    private server?: Express
-    private httpServer?: Server
-
-    constructor() {}
+    private server?: Express;
+    private httpServer?: Server;
 
     public async setup(port: number): Promise<Express>
     {
         //create server
         this.server = express();
 
+        this.server.use(bodyParser.json());
+
         //this create routes
-        this.createRoutes();
+        this.createRoutes(this.server);
 
         //listen
         this.httpServer = this.listen(this.server, port)
@@ -31,9 +40,24 @@ export class ExpressServer
         return this.server;
     }
 
-    private createRoutes () 
+    private createRoutes (express: Express) 
     {
-            
+       this.createAppRoutes(express);
+       this.createSearchRoutes(express);
+    }
+
+    //route methods
+
+    private createAppRoutes (express: Express) 
+    {
+        const appController = new AppController();
+        express.get("/api", (req, res) => appController.alive(req, res));
+    }
+
+    private createSearchRoutes (express: Express) 
+    {
+        const searchController = new SearchController();
+        express.post("/api/search", SchemaMiddleware(SearchSchema), (req, res) =>  searchController.search(req, res));
     }
 
     //listen
